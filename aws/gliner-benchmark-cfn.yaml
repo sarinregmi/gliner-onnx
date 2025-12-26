@@ -15,8 +15,8 @@ Parameters:
 
   KeyName:
     Type: String
-    Default: ""
-    Description: '(Optional) Name of an existing EC2 KeyPair to enable SSH access. If left blank, use Session Manager to connect.'
+    Default: "NONE"
+    Description: '(Optional) Name of an existing EC2 KeyPair. Keep as "NONE" to use Session Manager (no key needed).'
 
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
@@ -24,7 +24,7 @@ Parameters:
     Description: 'Latest Amazon Linux 2023 AMI (Minimal)'
 
 Conditions:
-  HasKey: !Not [ !Equals [ !Ref KeyName, "" ] ]
+  HasKey: !Not [ !Equals [ !Ref KeyName, "NONE" ] ]
 
 Resources:
   VPC:
@@ -112,7 +112,7 @@ Resources:
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: !Ref LatestAmiId
-      KeyName: !If [HasKey, !Ref KeyName, !Ref "AWS::NoValue"]
+      KeyName: !If [HasKey, !Ref KeyName, !Ref AWS::NoValue]
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref GlinerSecurityGroup
@@ -169,5 +169,9 @@ Outputs:
     Description: 'Public IP of the benchmark instance'
     Value: !GetAtt BenchmarkInstance.PublicIp
   SSHCommand:
-    Description: 'SSH command to connect to the instance'
+    Condition: HasKey
+    Description: 'SSH command to connect (only if KeyPair provided)'
     Value: !Sub 'ssh -i YourKeyPair.pem ec2-user@${BenchmarkInstance.PublicIp}'
+  SessionManagerLink:
+    Description: 'Link to connect via Session Manager (Recommended)'
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${BenchmarkInstance.InstanceId}'
