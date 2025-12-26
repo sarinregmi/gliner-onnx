@@ -23,6 +23,11 @@ Parameters:
     Default: '/aws/service/deeplearning/ami/al2023/base/x86_64/latest/image_id'
     Description: 'AWS Deep Learning AMI (Amazon Linux 2023) - Pre-installed with NVIDIA drivers and CUDA.'
 
+  SpotPrice:
+    Type: String
+    Default: "0.20"
+    Description: 'Maximum hourly price for the Spot instance. If set to a number, the instance will be launched as a Spot instance to save up to 90%.'
+
 Conditions:
   HasKey: !Not [ !Equals [ !Ref KeyName, "NONE" ] ]
 
@@ -117,6 +122,11 @@ Resources:
       SecurityGroupIds:
         - !Ref GlinerSecurityGroup
       IamInstanceProfile: !Ref InstanceProfile
+      InstanceMarketOptions:
+        MarketType: spot
+        SpotOptions:
+          MaxPrice: !Ref SpotPrice
+          SpotInstanceType: one-time
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
@@ -164,7 +174,20 @@ Resources:
           echo "source venv/bin/activate" >> /home/ec2-user/README.txt
           echo "python3 benchmark.py" >> /home/ec2-user/README.txt
           
-          chown -R ec2-user:ec2-user /home/ec2-user/gliner-onnx /home/ec2-user/README.txt
+          # Create a refresh script to update code without recreating stack
+          cat <<EOF > /home/ec2-user/update_and_run.sh
+          #!/bin/bash
+          echo "Updating code from GitHub..."
+          cd /home/ec2-user/gliner-onnx
+          git pull origin main
+          source venv/bin/activate
+          pip install -r requirements.txt
+          echo "Running benchmark..."
+          python3 benchmark.py
+          EOF
+          chmod +x /home/ec2-user/update_and_run.sh
+          
+          chown -R ec2-user:ec2-user /home/ec2-user/gliner-onnx /home/ec2-user/README.txt /home/ec2-user/update_and_run.sh
           echo "✓ All done!"
 
 Outputs:

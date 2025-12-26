@@ -47,14 +47,22 @@ You can use the provided CloudFormation template to test this on AWS.
 3.  Parameters:
     *   **InstanceType**: `g4dn.xlarge` for GPU/CUDA testing, or `c6i.xlarge` for high-performance CPU testing.
     *   **KeyName**: (Optional) Your existing EC2 KeyPair name. If left blank, you can connect via Session Manager.
+    *   **SpotPrice**: (Optional) Maximum hourly price for a Spot instance (default is $0.20/hr, which covers a `g4dn.xlarge` in most regions).
 4.  Once the stack is created, the instance will automatically:
     *   Clone this repo.
-    *   Install dependencies (including `onnxruntime-gpu` if a GPU is detected).
+    *   Install dependencies.
     *   Run `convert_model.py` to generate the ONNX models locally.
 5.  **Connecting to the instance:**
-    *   **Option A (Session Manager - Recommended)**: Go to the EC2 Console, select the instance, click **Connect**, and choose **Session Manager**. No key pair or SSH required!
-    *   **Option B (SSH)**: If you provided a `KeyName`, use standard SSH: `ssh -i your-key.pem ec2-user@<instance-ip>`.
-6.  Once connected, run the benchmark:
+    *   **Option A (Session Manager - Recommended)**: Go to the EC2 Console, select the instance, click **Connect**, and choose **Session Manager**.
+    *   **Option B (SSH)**: If you provided a `KeyName`, use standard SSH.
+6.  **Updating code (WITHOUT recreating stack):**
+    If you push changes to your GitHub repo, you can sync them to the instance by running:
+    ```bash
+    ./update_and_run.sh
+    ```
+    This script will pull the latest code, update requirements, and run the benchmark.
+
+7.  **Manual Benchmark:**
     ```bash
     cd gliner-onnx
     source venv/bin/activate
