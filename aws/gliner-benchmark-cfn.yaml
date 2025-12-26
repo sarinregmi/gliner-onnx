@@ -20,8 +20,8 @@ Parameters:
 
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
-    Description: 'Latest Amazon Linux 2023 AMI (Minimal)'
+    Default: '/aws/service/deeplearning/ami/al2023/base/x86_64/latest/image_id'
+    Description: 'AWS Deep Learning AMI (Amazon Linux 2023) - Pre-installed with NVIDIA drivers and CUDA.'
 
 Conditions:
   HasKey: !Not [ !Equals [ !Ref KeyName, "NONE" ] ]
@@ -127,9 +127,13 @@ Resources:
           #!/bin/bash
           set -e
           
-          # Update and install dependencies
-          yum update -y
-          yum install -y git python3 python3-pip pciutils
+          # Log output
+          exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+          
+          echo "Starting GLiNER benchmark setup..."
+          
+          # DL AMI already has git and python, but let's ensure we have pip
+          dnf install -y python3-pip pciutils
           
           # Clone the repository
           cd /home/ec2-user
@@ -137,32 +141,31 @@ Resources:
           cd gliner-onnx
           
           # Setup virtual environment
-          python3 -m venv venv
+          # We use --system-site-packages to leverage pre-installed CUDA/PyTorch if available
+          python3 -m venv venv --system-site-packages
           source venv/bin/activate
           
           # Install requirements
-          # Note: On a GPU instance, you might need to install CUDA-specific ONNX Runtime
           pip install --upgrade pip
           pip install -r requirements.txt
           
-          # Detect if GPU is available to install appropriate onnxruntime
+          # If it's a GPU instance, ensure onnxruntime-gpu is installed
           if lspci | grep -i nvidia; then
-             echo "NVIDIA GPU detected, installing onnxruntime-gpu"
-             pip uninstall -y onnxruntime
+             echo "NVIDIA GPU detected, ensuring onnxruntime-gpu is present"
              pip install onnxruntime-gpu
           fi
           
           # Run the model conversion to generate ONNX files locally 
-          # (since they are not in the repo)
           python3 convert_model.py
           
           # Final instructions for the user
-          echo "Setup complete! You can now run the benchmark:" >> /home/ec2-user/README.txt
+          echo "Setup complete! You can now run the benchmark:" > /home/ec2-user/README.txt
           echo "cd /home/ec2-user/gliner-onnx" >> /home/ec2-user/README.txt
           echo "source venv/bin/activate" >> /home/ec2-user/README.txt
           echo "python3 benchmark.py" >> /home/ec2-user/README.txt
           
           chown -R ec2-user:ec2-user /home/ec2-user/gliner-onnx /home/ec2-user/README.txt
+          echo "✓ All done!"
 
 Outputs:
   InstancePublicIp:
