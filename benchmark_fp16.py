@@ -6,11 +6,19 @@ Tests both PyTorch mixed precision and ONNX FP16 conversion.
 
 import sys
 import time
+import warnings
 import torch
 import onnx
 import onnxruntime as ort
 from pathlib import Path
 from onnx import numpy_helper
+
+# Suppress FP16 conversion warnings (they're just informational)
+warnings.filterwarnings("ignore", category=UserWarning, module="onnxconverter_common")
+# Suppress deprecated autocast warning
+warnings.filterwarnings(
+    "ignore", category=FutureWarning, message=".*torch.cuda.amp.autocast.*"
+)
 
 # Add local gliner to path
 sys.path.insert(0, str(Path(__file__).parent / "gliner"))
@@ -180,10 +188,12 @@ def main():
     batch_texts = [text] * 8
     batch_times = []
 
+    # Use the newer autocast API
     for _ in range(10):
         start = time.perf_counter()
-        with torch.cuda.amp.autocast():
-            _ = pytorch_model.predict_entities(batch_texts, labels)
+        with torch.amp.autocast("cuda"):
+            # Call predict_entities once with the list of texts
+            batch_results = pytorch_model.predict_entities(batch_texts, labels)
         end = time.perf_counter()
         batch_times.append((end - start) * 1000)
 
