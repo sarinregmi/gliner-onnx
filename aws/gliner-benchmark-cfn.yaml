@@ -20,7 +20,7 @@ Parameters:
 
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/deeplearning/ami/ubuntu-22.04/latest/image_id'
+    Default: '/aws/service/deeplearning/ami/x86_64/base-with-single-cuda-ubuntu-22.04/latest/ami-id'
     Description: 'AWS Deep Learning AMI (Ubuntu 22.04) - Pre-installed with NVIDIA drivers and CUDA.'
 
   SpotPrice:
