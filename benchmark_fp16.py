@@ -188,12 +188,12 @@ def main():
     batch_texts = [text] * 8
     batch_times = []
 
-    # Use the newer autocast API
+    # Use inference() method which supports batching natively
     for _ in range(10):
         start = time.perf_counter()
         with torch.amp.autocast("cuda"):
-            # Call predict_entities once with the list of texts
-            batch_results = pytorch_model.predict_entities(batch_texts, labels)
+            # Use inference() instead of predict_entities() for batching
+            batch_results = pytorch_model.inference(batch_texts, labels)
         end = time.perf_counter()
         batch_times.append((end - start) * 1000)
 
