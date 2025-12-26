@@ -23,11 +23,6 @@ Parameters:
     Default: '/aws/service/deeplearning/ami/x86_64/base-with-single-cuda-ubuntu-22.04/latest/ami-id'
     Description: 'AWS Deep Learning AMI (Ubuntu 22.04) - Pre-installed with NVIDIA drivers and CUDA.'
 
-  SpotPrice:
-    Type: String
-    Default: "0.20"
-    Description: 'Maximum hourly price for the Spot instance. If set to a number, the instance will be launched as a Spot instance to save up to 90%.'
-
 Conditions:
   HasKey: !Not [ !Equals [ !Ref KeyName, "NONE" ] ]
 
@@ -122,10 +117,6 @@ Resources:
       SecurityGroupIds:
         - !Ref GlinerSecurityGroup
       IamInstanceProfile: !Ref InstanceProfile
-      InstanceMarketOptions:
-        MarketType: spot
-        SpotOptions:
-          MaxPrice: !Ref SpotPrice
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
