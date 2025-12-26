@@ -126,7 +126,6 @@ Resources:
         MarketType: spot
         SpotOptions:
           MaxPrice: !Ref SpotPrice
-          SpotInstanceType: one-time
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
@@ -185,9 +184,9 @@ Resources:
           echo "Running benchmark..."
           python3 benchmark.py
           EOF
-          chmod +x /home/ec2-user/update_and_run.sh
+          chmod +x /home/ubuntu/update_and_run.sh
           
-          chown -R ec2-user:ec2-user /home/ec2-user/gliner-onnx /home/ec2-user/README.txt /home/ec2-user/update_and_run.sh
+          chown -R ubuntu:ubuntu /home/ubuntu/gliner-onnx /home/ubuntu/README.txt /home/ubuntu/update_and_run.sh
           echo "✓ All done!"
 
 Outputs:
