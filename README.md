@@ -38,6 +38,21 @@ Run the verification script to load the pre-converted model in `models/` and che
 python verify_model.py
 ```
 
+## AWS Deployment
+
+You can use the provided CloudFormation template to test this on AWS.
+
+1.  Navigate to the `aws/` directory.
+2.  Use the `gliner-benchmark-cfn.yaml` template in the AWS CloudFormation Console.
+3.  Parameters:
+    *   **InstanceType**: `g4dn.xlarge` for GPU/CUDA testing, or `c6i.xlarge` for high-performance CPU testing.
+    *   **KeyName**: Your existing EC2 KeyPair name.
+4.  Once the stack is created, the instance will automatically:
+    *   Clone this repo.
+    *   Install dependencies (including `onnxruntime-gpu` if a GPU is detected).
+    *   Run `convert_model.py` to generate the ONNX models locally.
+5.  SSH into the instance and run `python benchmark.py` to see the results on AWS!
+
 ### 3. Convert a Model (Optional)
 If you need to re-convert the model:
 ```bash

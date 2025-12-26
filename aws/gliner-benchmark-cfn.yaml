@@ -1,0 +1,169 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for GLiNER ONNX Benchmark Environment'
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: g4dn.xlarge
+    AllowedValues:
+      - g4dn.xlarge
+      - g4dn.2xlarge
+      - c6i.xlarge
+      - c6i.2xlarge
+      - t3.medium
+    Description: 'EC2 instance type. Use g4dn for GPU (CUDA) testing.'
+
+  KeyName:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: 'Name of an existing EC2 KeyPair to enable SSH access to the instance'
+
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
+    Description: 'Latest Amazon Linux 2023 AMI (Minimal)'
+
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: gliner-benchmark-vpc
+
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: gliner-benchmark-public-subnet
+
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+
+  DefaultPublicRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  GlinerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable SSH access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+
+  BenchmarkInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref LatestAmiId
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref GlinerSecurityGroup
+      IamInstanceProfile: !Ref InstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 40
+            VolumeType: gp3
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+          
+          # Update and install dependencies
+          yum update -y
+          yum install -y git python3 python3-pip
+          
+          # Clone the repository
+          cd /home/ec2-user
+          git clone https://github.com/sarinregmi/gliner-onnx.git
+          cd gliner-onnx
+          
+          # Setup virtual environment
+          python3 -m venv venv
+          source venv/bin/activate
+          
+          # Install requirements
+          # Note: On a GPU instance, you might need to install CUDA-specific ONNX Runtime
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          
+          # Detect if GPU is available to install appropriate onnxruntime
+          if lspci | grep -i nvidia; then
+             echo "NVIDIA GPU detected, installing onnxruntime-gpu"
+             pip uninstall -y onnxruntime
+             pip install onnxruntime-gpu
+          fi
+          
+          # Run the model conversion to generate ONNX files locally 
+          # (since they are not in the repo)
+          python3 convert_model.py
+          
+          # Final instructions for the user
+          echo "Setup complete! You can now run the benchmark:" >> /home/ec2-user/README.txt
+          echo "cd /home/ec2-user/gliner-onnx" >> /home/ec2-user/README.txt
+          echo "source venv/bin/activate" >> /home/ec2-user/README.txt
+          echo "python3 benchmark.py" >> /home/ec2-user/README.txt
+          
+          chown -R ec2-user:ec2-user /home/ec2-user/gliner-onnx /home/ec2-user/README.txt
+
+Outputs:
+  InstancePublicIp:
+    Description: 'Public IP of the benchmark instance'
+    Value: !GetAtt BenchmarkInstance.PublicIp
+  SSHCommand:
+    Description: 'SSH command to connect to the instance'
+    Value: !Sub 'ssh -i YourKeyPair.pem ec2-user@${BenchmarkInstance.PublicIp}'
