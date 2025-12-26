@@ -153,10 +153,14 @@ def main():
         except Exception as e:
             print(f"Failed: {e}\n")
 
-        # Convert to FP16
-        print("--- Test 4: ONNX FP16 CUDA (Converting...) ---")
+        # Convert to FP16 if not already done
+        print("--- Test 4: ONNX FP16 CUDA ---")
         try:
-            convert_onnx_to_fp16(fp32_onnx_path, fp16_onnx_path)
+            if not fp16_onnx_path.exists():
+                print(f"FP16 model not found, converting...")
+                convert_onnx_to_fp16(fp32_onnx_path, fp16_onnx_path)
+            else:
+                print(f"✓ Using existing FP16 model: {fp16_onnx_path}")
 
             onnx_fp16_time, _ = benchmark_onnx(
                 fp16_onnx_path, text, labels, num_runs=20, use_cuda=True
@@ -166,7 +170,7 @@ def main():
             print(f"Speedup vs PyTorch FP32: {fp32_time/onnx_fp16_time:.2f}x\n")
             results["ONNX FP16 CUDA"] = onnx_fp16_time
         except Exception as e:
-            print(f"FP16 conversion failed: {e}\n")
+            print(f"FP16 test failed: {e}\n")
     else:
         print(f"⚠️  ONNX model not found at {fp32_onnx_path}")
         print("Run 'python convert_model.py' first to generate ONNX models.\n")
