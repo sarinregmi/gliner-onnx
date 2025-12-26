@@ -47,7 +47,6 @@ You can use the provided CloudFormation template to test this on AWS.
 3.  Parameters:
     *   **InstanceType**: `g4dn.xlarge` for GPU/CUDA testing, or `c6i.xlarge` for high-performance CPU testing.
     *   **KeyName**: (Optional) Your existing EC2 KeyPair name. If left blank, you can connect via Session Manager.
-    *   **SpotPrice**: (Optional) Maximum hourly price for a Spot instance (default is $0.20/hr, which covers a `g4dn.xlarge` in most regions).
 4.  Once the stack is created, the instance will automatically:
     *   Clone this repo.
     *   Install dependencies.

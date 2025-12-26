@@ -147,12 +147,13 @@ Resources:
           
           # Install requirements
           pip install --upgrade pip
-          pip install -r requirements.txt
           
-          # If it's a GPU instance, ensure onnxruntime-gpu is installed
+          # If it's a GPU instance, use GPU-specific requirements
           if lspci | grep -i nvidia; then
-             echo "NVIDIA GPU detected, ensuring onnxruntime-gpu is present"
-             pip install onnxruntime-gpu
+             echo "NVIDIA GPU detected, installing GPU requirements"
+             pip install -r requirements-gpu.txt
+          else
+             pip install -r requirements.txt
           fi
           
           # Run the model conversion to generate ONNX files locally 
@@ -171,7 +172,16 @@ Resources:
           cd /home/ubuntu/gliner-onnx
           git pull origin main
           source venv/bin/activate
-          pip install -r requirements.txt
+          
+          # Reinstall requirements based on hardware
+          if lspci | grep -i nvidia; then
+             echo "GPU detected, using GPU requirements"
+             pip uninstall -y onnxruntime onnxruntime-gpu
+             pip install -r requirements-gpu.txt
+          else
+             pip install -r requirements.txt
+          fi
+          
           echo "Running benchmark..."
           python3 benchmark.py
           EOF
