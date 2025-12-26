@@ -20,8 +20,8 @@ Parameters:
 
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/deeplearning/ami/al2023/base/x86_64/latest/image_id'
-    Description: 'AWS Deep Learning AMI (Amazon Linux 2023) - Pre-installed with NVIDIA drivers and CUDA.'
+    Default: '/aws/service/deeplearning/ami/ubuntu-22.04/latest/image_id'
+    Description: 'AWS Deep Learning AMI (Ubuntu 22.04) - Pre-installed with NVIDIA drivers and CUDA.'
 
   SpotPrice:
     Type: String
@@ -140,18 +140,18 @@ Resources:
           # Log output
           exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
           
-          echo "Starting GLiNER benchmark setup..."
+          echo "Starting GLiNER benchmark setup (Ubuntu)..."
           
-          # DL AMI already has git and python, but let's ensure we have pip
-          dnf install -y python3-pip pciutils
+          # Update and install basic dependencies
+          apt-get update -y
+          apt-get install -y git python3-pip python3-venv pciutils
           
           # Clone the repository
-          cd /home/ec2-user
+          cd /home/ubuntu
           git clone https://github.com/sarinregmi/gliner-onnx.git
           cd gliner-onnx
           
           # Setup virtual environment
-          # We use --system-site-packages to leverage pre-installed CUDA/PyTorch if available
           python3 -m venv venv --system-site-packages
           source venv/bin/activate
           
@@ -169,16 +169,16 @@ Resources:
           python3 convert_model.py
           
           # Final instructions for the user
-          echo "Setup complete! You can now run the benchmark:" > /home/ec2-user/README.txt
-          echo "cd /home/ec2-user/gliner-onnx" >> /home/ec2-user/README.txt
-          echo "source venv/bin/activate" >> /home/ec2-user/README.txt
-          echo "python3 benchmark.py" >> /home/ec2-user/README.txt
+          echo "Setup complete! You can now run the benchmark:" > /home/ubuntu/README.txt
+          echo "cd /home/ubuntu/gliner-onnx" >> /home/ubuntu/README.txt
+          echo "source venv/bin/activate" >> /home/ubuntu/README.txt
+          echo "python3 benchmark.py" >> /home/ubuntu/README.txt
           
           # Create a refresh script to update code without recreating stack
-          cat <<EOF > /home/ec2-user/update_and_run.sh
+          cat <<EOF > /home/ubuntu/update_and_run.sh
           #!/bin/bash
           echo "Updating code from GitHub..."
-          cd /home/ec2-user/gliner-onnx
+          cd /home/ubuntu/gliner-onnx
           git pull origin main
           source venv/bin/activate
           pip install -r requirements.txt
@@ -197,7 +197,7 @@ Outputs:
   SSHCommand:
     Condition: HasKey
     Description: 'SSH command to connect (only if KeyPair provided)'
-    Value: !Sub 'ssh -i YourKeyPair.pem ec2-user@${BenchmarkInstance.PublicIp}'
+    Value: !Sub 'ssh -i YourKeyPair.pem ubuntu@${BenchmarkInstance.PublicIp}'
   SessionManagerLink:
     Description: 'Link to connect via Session Manager (Recommended)'
     Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${BenchmarkInstance.InstanceId}'

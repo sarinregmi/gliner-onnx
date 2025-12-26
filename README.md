@@ -54,7 +54,7 @@ You can use the provided CloudFormation template to test this on AWS.
     *   Run `convert_model.py` to generate the ONNX models locally.
 5.  **Connecting to the instance:**
     *   **Option A (Session Manager - Recommended)**: Go to the EC2 Console, select the instance, click **Connect**, and choose **Session Manager**.
-    *   **Option B (SSH)**: If you provided a `KeyName`, use standard SSH.
+    *   **Option B (SSH)**: If you provided a `KeyName`, use standard SSH: `ssh -i your-key.pem ubuntu@<instance-ip>`.
 6.  **Updating code (WITHOUT recreating stack):**
     If you push changes to your GitHub repo, you can sync them to the instance by running:
     ```bash
@@ -64,7 +64,7 @@ You can use the provided CloudFormation template to test this on AWS.
 
 7.  **Manual Benchmark:**
     ```bash
-    cd gliner-onnx
+    cd /home/ubuntu/gliner-onnx
     source venv/bin/activate
     python benchmark.py
     ```
