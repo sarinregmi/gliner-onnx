@@ -14,13 +14,17 @@ Parameters:
     Description: 'EC2 instance type. Use g4dn for GPU (CUDA) testing.'
 
   KeyName:
-    Type: 'AWS::EC2::KeyPair::KeyName'
-    Description: 'Name of an existing EC2 KeyPair to enable SSH access to the instance'
+    Type: String
+    Default: ""
+    Description: '(Optional) Name of an existing EC2 KeyPair to enable SSH access. If left blank, use Session Manager to connect.'
 
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
     Description: 'Latest Amazon Linux 2023 AMI (Minimal)'
+
+Conditions:
+  HasKey: !Not [ !Equals [ !Ref KeyName, "" ] ]
 
 Resources:
   VPC:
@@ -108,7 +112,7 @@ Resources:
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: !Ref LatestAmiId
-      KeyName: !Ref KeyName
+      KeyName: !If [HasKey, !Ref KeyName, !Ref "AWS::NoValue"]
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref GlinerSecurityGroup
@@ -125,7 +129,7 @@ Resources:
           
           # Update and install dependencies
           yum update -y
-          yum install -y git python3 python3-pip
+          yum install -y git python3 python3-pip pciutils
           
           # Clone the repository
           cd /home/ec2-user

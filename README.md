@@ -46,12 +46,20 @@ You can use the provided CloudFormation template to test this on AWS.
 2.  Use the `gliner-benchmark-cfn.yaml` template in the AWS CloudFormation Console.
 3.  Parameters:
     *   **InstanceType**: `g4dn.xlarge` for GPU/CUDA testing, or `c6i.xlarge` for high-performance CPU testing.
-    *   **KeyName**: Your existing EC2 KeyPair name.
+    *   **KeyName**: (Optional) Your existing EC2 KeyPair name. If left blank, you can connect via Session Manager.
 4.  Once the stack is created, the instance will automatically:
     *   Clone this repo.
     *   Install dependencies (including `onnxruntime-gpu` if a GPU is detected).
     *   Run `convert_model.py` to generate the ONNX models locally.
-5.  SSH into the instance and run `python benchmark.py` to see the results on AWS!
+5.  **Connecting to the instance:**
+    *   **Option A (Session Manager - Recommended)**: Go to the EC2 Console, select the instance, click **Connect**, and choose **Session Manager**. No key pair or SSH required!
+    *   **Option B (SSH)**: If you provided a `KeyName`, use standard SSH: `ssh -i your-key.pem ec2-user@<instance-ip>`.
+6.  Once connected, run the benchmark:
+    ```bash
+    cd gliner-onnx
+    source venv/bin/activate
+    python benchmark.py
+    ```
 
 ### 3. Convert a Model (Optional)
 If you need to re-convert the model:
