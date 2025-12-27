@@ -60,19 +60,33 @@ def diagnostic_run():
     print("\n--- [1] Raw ONNX Runtime (CUDA) ---")
     session = ort.InferenceSession(str(fp32_path), providers=["CUDAExecutionProvider"])
 
-    # Simple dummy inputs based on expected ONNX inputs
-    # Note: This is just for timing the model.run call itself
-    input_names = [i.name for i in session.get_inputs()]
-    dummy_inputs = {}
-    for inp in session.get_inputs():
-        shape = [1, 128] if len(inp.shape) == 2 else [1]
-        dummy_inputs[inp.name] = np.zeros(
-            shape,
-            dtype=np.int64 if "id" in inp.name or "mask" in inp.name else np.int64,
-        )
+    # Map ORT types to numpy types
+    type_map = {
+        "tensor(int64)": np.int64,
+        "tensor(float)": np.float32,
+        "tensor(bool)": np.bool_,
+        "tensor(float16)": np.float16,
+    }
 
-    # Specific adjustment for GLiNER inputs if known
-    # Typical GLiNER ONNX inputs: input_ids, attention_mask, words_mask, text_lengths, span_idx, span_mask
+    dummy_inputs = {}
+    print("Inference Session Inputs:")
+    for inp in session.get_inputs():
+        dtype = type_map.get(inp.type, np.int64)
+        print(f"  - {inp.name}: {inp.type} -> {dtype}")
+
+        # Handle dynamic shapes (usually first dim is batch, often marked as None or string)
+        shape = []
+        for dim in inp.shape:
+            if isinstance(dim, str) or dim is None:
+                shape.append(1)
+            else:
+                shape.append(dim)
+
+        # Special case: sequence lengths or other specifics
+        if "len" in inp.name or "idx" in inp.name:
+            dummy_inputs[inp.name] = np.zeros(shape, dtype=dtype)
+        else:
+            dummy_inputs[inp.name] = np.zeros(shape, dtype=dtype)
 
     # Warmup
     for _ in range(5):
