@@ -161,7 +161,9 @@ def run_benchmark():
     # --- [2] PyTorch CUDA FP32 ---
     if HAS_CUDA:
         print("Testing PyTorch CUDA FP32...")
-        model = GLiNER.from_pretrained("nvidia/gliner-PII").to("cuda")
+        # Load directly to cuda
+        model = GLiNER.from_pretrained("nvidia/gliner-PII", map_location="cuda")
+        model.eval()
         results_single["PyTorch CUDA FP32"] = benchmark_single(model, text, labels)
         results_batch["PyTorch CUDA FP32"] = benchmark_batched(model, text, labels)
         del model
@@ -170,7 +172,8 @@ def run_benchmark():
     # --- [3] PyTorch CUDA FP16 (AMP) ---
     if HAS_CUDA:
         print("Testing PyTorch CUDA FP16 (AMP)...")
-        model = GLiNER.from_pretrained("nvidia/gliner-PII").to("cuda")
+        model = GLiNER.from_pretrained("nvidia/gliner-PII", map_location="cuda")
+        model.eval()
         results_single["PyTorch CUDA FP16 (AMP)"] = benchmark_single(
             model, text, labels, use_amp=True
         )
@@ -185,9 +188,13 @@ def run_benchmark():
     if fp32_path.exists() and "CUDAExecutionProvider" in AVAILABLE_PROVIDERS:
         print("Testing ONNX CUDA FP32...")
         try:
+            # IMPORTANT: map_location='cuda' is required to trigger CUDAExecutionProvider in the wrapper
             model = GLiNER.from_pretrained(
-                str(models_dir), load_onnx_model=True, onnx_model_path=str(fp32_path)
-            ).to("cuda")
+                str(models_dir),
+                load_onnx_model=True,
+                onnx_model_file=fp32_path.name,
+                map_location="cuda",
+            )
             results_single["ONNX CUDA FP32"] = benchmark_single(model, text, labels)
             results_batch["ONNX CUDA FP32"] = benchmark_batched(model, text, labels)
             del model
@@ -201,11 +208,13 @@ def run_benchmark():
         if convert_to_fp16_if_missing(fp32_path, fp16_path):
             print("Testing ONNX CUDA FP16...")
             try:
+                # IMPORTANT: map_location='cuda' is required
                 model = GLiNER.from_pretrained(
                     str(models_dir),
                     load_onnx_model=True,
-                    onnx_model_path=str(fp16_path),
-                ).to("cuda")
+                    onnx_model_file=fp16_path.name,
+                    map_location="cuda",
+                )
                 results_single["ONNX CUDA FP16"] = benchmark_single(model, text, labels)
                 results_batch["ONNX CUDA FP16"] = benchmark_batched(model, text, labels)
                 del model
