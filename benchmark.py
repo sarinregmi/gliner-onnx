@@ -151,6 +151,25 @@ def run_benchmark():
     results_single = {}
     results_batch = {}
 
+    # Check for memory simulation
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--memory-load", type=int, default=0, help="GB of GPU memory to occupy"
+    )
+    args, unknown = parser.parse_known_args()
+
+    dummy_tensor = None
+    if args.memory_load > 0 and torch.cuda.is_available():
+        print(f"⚠️ SIMULATING SLM LOAD: Allocating {args.memory_load}GB of VRAM...")
+        try:
+            # 1 GB = 1024^3 bytes. float32 is 4 bytes.
+            # Elements needed: (GB * 1024^3) / 4
+            num_elements = (args.memory_load * (1024**3)) // 4
+            dummy_tensor = torch.empty(num_elements, dtype=torch.float32, device="cuda")
+            print(f"✅ Allocated {args.memory_load}GB. VRAM is now occupied.")
+        except Exception as e:
+            print(f"❌ Failed to allocate dummy memory: {e}")
+
     # --- [1] PyTorch CPU (Baseline) ---
     print("Testing PyTorch CPU...")
     model = GLiNER.from_pretrained("nvidia/gliner-PII").to("cpu")
