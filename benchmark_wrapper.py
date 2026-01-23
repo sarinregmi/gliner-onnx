@@ -78,7 +78,7 @@ async def run_benchmark(
             *command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd="/app"
+            cwd="/app",
         )
         stdout, stderr = await asyncio.wait_for(
             process.communicate(), timeout=280  # Cloud Run default timeout is 300s
@@ -127,6 +127,56 @@ async def warmup():
         return JSONResponse(
             {"status": "warmup_failed", "error": str(e)}, status_code=500
         )
+
+
+@app.get("/run_slm_benchmark")
+async def run_slm_benchmark(
+    model: str = Query(
+        default="microsoft/Phi-3-mini-4k-instruct",
+        description="Model name to benchmark",
+    ),
+    runs: int = Query(default=10, ge=1, le=50, description="Number of benchmark runs"),
+):
+    """
+    Run SLM (Layer 3) benchmark using vLLM.
+    Tests inference latency for semantic analysis models like Phi-3/4-mini.
+    """
+    command = [
+        "python",
+        "benchmark_slm.py",
+        "--model",
+        model,
+        "--runs",
+        str(runs),
+        "--backend",
+        "vllm",
+    ]
+
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd="/app",
+        )
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=280)
+
+        return JSONResponse(
+            {
+                "status": "success" if process.returncode == 0 else "error",
+                "return_code": process.returncode,
+                "stdout": stdout.decode(),
+                "stderr": stderr.decode() if stderr else None,
+            }
+        )
+
+    except asyncio.TimeoutError:
+        return JSONResponse(
+            {"status": "timeout", "error": "SLM benchmark exceeded 280 second limit"},
+            status_code=504,
+        )
+    except Exception as e:
+        return JSONResponse({"status": "failed", "error": str(e)}, status_code=500)
 
 
 if __name__ == "__main__":
