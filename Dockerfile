@@ -53,6 +53,10 @@ RUN pip install --no-cache-dir \
     sentencepiece==0.2.0 \
     tqdm==4.66.1
 
+# Install vLLM for SLM inference (Layer 3)
+# Note: vLLM requires specific CUDA version and takes time to install
+RUN pip install --no-cache-dir vllm==0.3.3
+
 # Install GLiNER (from PyPI or local)
 # Using local copy for custom modifications
 COPY gliner /app/gliner
@@ -60,6 +64,7 @@ COPY gliner_config.json /app/
 
 # Copy application code
 COPY benchmark.py /app/
+COPY benchmark_slm.py /app/
 COPY benchmark_wrapper.py /app/
 COPY requirements.txt /app/
 COPY requirements-gpu.txt /app/
