@@ -1,0 +1,51 @@
+# ============================================================================
+# GLiNER Benchmark - Cloud Build Configuration
+# ============================================================================
+# This file configures Google Cloud Build to build the Docker image.
+# It is automatically used when running `gcloud builds submit`.
+# ============================================================================
+
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${_IMAGE_NAME}:${_TAG}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${_IMAGE_NAME}:latest'
+      - '--cache-from'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${_IMAGE_NAME}:latest'
+      - '.'
+    timeout: '1800s'
+
+  # Step 2: Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${_IMAGE_NAME}:${_TAG}'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${_IMAGE_NAME}:latest'
+
+# Substitution variables (can be overridden at build time)
+substitutions:
+  _REGION: 'us-central1'
+  _IMAGE_NAME: 'gliner-benchmark'
+  _TAG: '${SHORT_SHA}'
+
+# Build options
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: 'CLOUD_LOGGING_ONLY'
+  dynamicSubstitutions: true
+
+# Artifact Registry images to push
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${_IMAGE_NAME}:${_TAG}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${_IMAGE_NAME}:latest'
+
+# Build timeout
+timeout: '2400s'
