@@ -17,14 +17,24 @@ set -e
 # ============================================================================
 # CONFIGURATION - Modify these values for your environment
 # ============================================================================
-PROJECT_ID="${GCP_PROJECT_ID:-your-project-id}"
+PROJECT_ID="${GCP_PROJECT_ID:-cyberceptai}"
+if [ "$PROJECT_ID" = "your-project-id" ]; then
+    PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+fi
+
+# Final validation of PROJECT_ID
+if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "your-project-id" ]; then
+    echo "❌ ERROR: GCP_PROJECT_ID is not set and could not be determined from gcloud config."
+    echo "   Please set it using: export GCP_PROJECT_ID=your-actual-project-id"
+    exit 1
+fi
 REGION="${GCP_REGION:-us-central1}"
 SERVICE_NAME="gliner-benchmark"
 IMAGE_NAME="gliner-benchmark"
-MEMORY="16Gi"        # Memory allocation
-CPU="4"              # vCPUs
-GPU_TYPE="nvidia-l4" # GPU type (L4 is standard for Cloud Run)
-GPU_COUNT="1"        # Number of GPUs
+MEMORY="16Gi"         # Memory allocation (Optimized for Cloud Run)
+CPU="4"              # vCPUs (Optimized for Cloud Run)
+# GPU_TYPE="nvidia-l4" # GPU type (L4 is standard for Cloud Run)
+# GPU_COUNT="1"        # Number of GPUs
 MIN_INSTANCES="0"    # Scale to zero when idle
 MAX_INSTANCES="1"    # Max instances for benchmark
 TIMEOUT="300"        # Request timeout in seconds
@@ -57,10 +67,7 @@ check_prerequisites() {
     echo "✅ Authenticated to GCP"
     
     # Check project
-    if [ "$PROJECT_ID" == "your-project-id" ]; then
-        echo "❌ Please set GCP_PROJECT_ID environment variable or edit this script"
-        exit 1
-    fi
+    # PROJECT_ID is already validated in CONFIGURATION section
     echo "✅ Project ID: $PROJECT_ID"
     
     # Set project
@@ -103,11 +110,17 @@ build_and_push_image() {
     echo "This may take 10-15 minutes for the first build..."
     
     # Use Cloud Build for remote building (no local Docker needed)
+    # Determine the project root relative to this script
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    
+    echo "Submitting build from: $PROJECT_ROOT"
+
     gcloud builds submit \
         --tag "$IMAGE_URI" \
         --timeout=1800s \
         --machine-type=e2-highcpu-8 \
-        ..
+        "$PROJECT_ROOT"
     
     echo "✅ Image built and pushed: $IMAGE_URI"
 }
@@ -123,14 +136,17 @@ deploy_to_cloud_run() {
         --platform managed \
         --memory "$MEMORY" \
         --cpu "$CPU" \
-        --gpu "$GPU_COUNT" \
-        --gpu-type "$GPU_TYPE" \
         --min-instances "$MIN_INSTANCES" \
         --max-instances "$MAX_INSTANCES" \
         --timeout "$TIMEOUT" \
         --allow-unauthenticated \
         --set-env-vars="PYTHONUNBUFFERED=1" \
-        --port 8080
+        --port 8080 \
+        --no-cpu-throttling
+    
+    # GPU args removed for CPU deployment
+    # --gpu "$GPU_COUNT" \
+    # --gpu-type "$GPU_TYPE" \
     
     echo "✅ Deployed to Cloud Run"
 }

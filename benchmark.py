@@ -15,6 +15,7 @@ import sys
 import os
 import warnings
 import gc
+import argparse
 from pathlib import Path
 
 # Suppress warnings
@@ -36,7 +37,12 @@ try:
     import onnx
 
     AVAILABLE_PROVIDERS = ort.get_available_providers()
-except ImportError:
+except ImportError as e:
+    print(f"⚠️ Error importing ONNX Runtime: {e}")
+    AVAILABLE_PROVIDERS = []
+    ort = None
+except Exception as e:
+    print(f"⚠️ Unexpected error importing ONNX Runtime: {e}")
     AVAILABLE_PROVIDERS = []
     ort = None
 

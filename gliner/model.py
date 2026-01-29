@@ -730,7 +730,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             output_names=output_names,
             dynamic_axes=dynamic_axes,
             opset_version=opset,
-            dynamo=False,
         )
 
     def _maybe_quantize_onnx(

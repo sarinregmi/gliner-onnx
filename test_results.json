@@ -1,0 +1,580 @@
+{
+  "summary": {
+    "avg_latency": 583.400761000424,
+    "min_latency": 475.27091699885204,
+    "max_latency": 1573.2692500023404
+  },
+  "results": [
+    {
+      "id": 1,
+      "text": "My name is John Doe and I work at Microsoft.",
+      "latency_api": 1573.2692500023404,
+      "latency_model": 1107.7870489999952,
+      "entities": 2,
+      "details": [
+        {
+          "start": 11,
+          "end": 19,
+          "text": "John Doe",
+          "label": "person",
+          "score": 0.9909033179283142
+        },
+        {
+          "start": 34,
+          "end": 43,
+          "text": "Microsoft",
+          "label": "organization",
+          "score": 0.9999085664749146
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "text": "Contact Alice at alice@example.com for more info.",
+      "latency_api": 544.2365000053542,
+      "latency_model": 168.88778399999183,
+      "entities": 2,
+      "details": [
+        {
+          "start": 8,
+          "end": 13,
+          "text": "Alice",
+          "label": "person",
+          "score": 0.999993085861206
+        },
+        {
+          "start": 17,
+          "end": 22,
+          "text": "alice",
+          "label": "person",
+          "score": 0.9999865293502808
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "text": "The headquarters of Google is in Mountain View.",
+      "latency_api": 561.1640420102049,
+      "latency_model": 199.56634500000803,
+      "entities": 2,
+      "details": [
+        {
+          "start": 20,
+          "end": 26,
+          "text": "Google",
+          "label": "organization",
+          "score": 0.9997319579124451
+        },
+        {
+          "start": 33,
+          "end": 46,
+          "text": "Mountain View",
+          "label": "city",
+          "score": 0.9999932050704956
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "text": "Please call 555-0199 to reach customer support.",
+      "latency_api": 511.05529100459535,
+      "latency_model": 154.9522590000123,
+      "entities": 1,
+      "details": [
+        {
+          "start": 12,
+          "end": 20,
+          "text": "555-0199",
+          "label": "phone_number",
+          "score": 0.9999891519546509
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "text": "Dr. Smith scheduled an appointment for Monday.",
+      "latency_api": 595.3568750119302,
+      "latency_model": 154.11443700000405,
+      "entities": 2,
+      "details": [
+        {
+          "start": 0,
+          "end": 9,
+          "text": "Dr. Smith",
+          "label": "person",
+          "score": 0.9981390237808228
+        },
+        {
+          "start": 39,
+          "end": 45,
+          "text": "Monday",
+          "label": "date",
+          "score": 0.9999512434005737
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "text": "My IP address is 192.168.1.1.",
+      "latency_api": 589.621042003273,
+      "latency_model": 226.48559499999976,
+      "entities": 1,
+      "details": [
+        {
+          "start": 17,
+          "end": 28,
+          "text": "192.168.1.1",
+          "label": "ip_address",
+          "score": 0.999933123588562
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "text": "I bought this from Amazon using my Visa card.",
+      "latency_api": 550.5892079963814,
+      "latency_model": 168.02492800000834,
+      "entities": 2,
+      "details": [
+        {
+          "start": 19,
+          "end": 25,
+          "text": "Amazon",
+          "label": "organization",
+          "score": 0.9956847429275513
+        },
+        {
+          "start": 35,
+          "end": 39,
+          "text": "Visa",
+          "label": "credit_card",
+          "score": 0.9536683559417725
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "text": "Sarah visited Paris last summer.",
+      "latency_api": 511.4052499993704,
+      "latency_model": 124.26638600000217,
+      "entities": 2,
+      "details": [
+        {
+          "start": 0,
+          "end": 5,
+          "text": "Sarah",
+          "label": "person",
+          "score": 0.9999886751174927
+        },
+        {
+          "start": 14,
+          "end": 19,
+          "text": "Paris",
+          "label": "city",
+          "score": 0.9999922513961792
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "text": "The meeting is at 10:00 AM in Room 302.",
+      "latency_api": 614.5036670059199,
+      "latency_model": 168.61533700000564,
+      "entities": 2,
+      "details": [
+        {
+          "start": 18,
+          "end": 26,
+          "text": "10:00 AM",
+          "label": "time",
+          "score": 0.9999946355819702
+        },
+        {
+          "start": 30,
+          "end": 38,
+          "text": "Room 302",
+          "label": "location",
+          "score": 0.9998323917388916
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "text": "Send the package to 123 Main St, New York, NY.",
+      "latency_api": 613.9685419911984,
+      "latency_model": 172.9260700000026,
+      "entities": 1,
+      "details": [
+        {
+          "start": 20,
+          "end": 31,
+          "text": "123 Main St",
+          "label": "address",
+          "score": 0.999795138835907
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "text": "My social security number is 123-45-6789.",
+      "latency_api": 610.8344579988625,
+      "latency_model": 160.16498499999443,
+      "entities": 1,
+      "details": [
+        {
+          "start": 29,
+          "end": 40,
+          "text": "123-45-6789",
+          "label": "ssn",
+          "score": 0.9999945163726807
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "text": "Robert Downey Jr. is a famous actor.",
+      "latency_api": 621.8349170085276,
+      "latency_model": 155.75428600000407,
+      "entities": 1,
+      "details": [
+        {
+          "start": 0,
+          "end": 17,
+          "text": "Robert Downey Jr.",
+          "label": "person",
+          "score": 0.9990567564964294
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "text": "I use an iPhone 14 Pro Max.",
+      "latency_api": 509.6575419884175,
+      "latency_model": 124.83709800000042,
+      "entities": 1,
+      "details": [
+        {
+          "start": 9,
+          "end": 26,
+          "text": "iPhone 14 Pro Max",
+          "label": "product",
+          "score": 0.9987217783927917
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "text": "The code is stored on GitHub.",
+      "latency_api": 475.27091699885204,
+      "latency_model": 111.8843970000114,
+      "entities": 1,
+      "details": [
+        {
+          "start": 22,
+          "end": 28,
+          "text": "GitHub",
+          "label": "organization",
+          "score": 0.9591249823570251
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "text": "Contact info@openai.com for API access.",
+      "latency_api": 503.3736250043148,
+      "latency_model": 136.76232599999594,
+      "entities": 1,
+      "details": [
+        {
+          "start": 8,
+          "end": 23,
+          "text": "info@openai.com",
+          "label": "email",
+          "score": 0.9999957084655762
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "text": "My birthdate is January 1st, 1990.",
+      "latency_api": 556.5001659997506,
+      "latency_model": 135.919616999999,
+      "entities": 1,
+      "details": [
+        {
+          "start": 16,
+          "end": 33,
+          "text": "January 1st, 1990",
+          "label": "date",
+          "score": 0.9999861717224121
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "text": "The server is running on AWS us-east-1.",
+      "latency_api": 513.2979579939274,
+      "latency_model": 154.89884099999074,
+      "entities": 1,
+      "details": [
+        {
+          "start": 25,
+          "end": 38,
+          "text": "AWS us-east-1",
+          "label": "organization",
+          "score": 0.9110764265060425
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "text": "Payment of $50.00 was received.",
+      "latency_api": 507.61404099466745,
+      "latency_model": 143.15372000000082,
+      "entities": 1,
+      "details": [
+        {
+          "start": 11,
+          "end": 17,
+          "text": "$50.00",
+          "label": "currency",
+          "score": 0.9942960143089294
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "text": "Mr. Bond drives an Aston Martin.",
+      "latency_api": 614.5241659978637,
+      "latency_model": 207.95798199999638,
+      "entities": 2,
+      "details": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": "Mr. Bond",
+          "label": "person",
+          "score": 0.9948956370353699
+        },
+        {
+          "start": 19,
+          "end": 31,
+          "text": "Aston Martin",
+          "label": "product",
+          "score": 0.9969789981842041
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "text": "The event is in London, UK.",
+      "latency_api": 492.41437499586027,
+      "latency_model": 119.52782999999556,
+      "entities": 2,
+      "details": [
+        {
+          "start": 16,
+          "end": 22,
+          "text": "London",
+          "label": "city",
+          "score": 0.9999979734420776
+        },
+        {
+          "start": 24,
+          "end": 26,
+          "text": "UK",
+          "label": "country",
+          "score": 0.9999997615814209
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "text": "Call me at +1 (415) 555-2671.",
+      "latency_api": 562.7308750117663,
+      "latency_model": 200.98144300000342,
+      "entities": 1,
+      "details": [
+        {
+          "start": 11,
+          "end": 28,
+          "text": "+1 (415) 555-2671",
+          "label": "phone_number",
+          "score": 0.9999598264694214
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "text": "I have a meeting with CEO Satya Nadella.",
+      "latency_api": 528.2678329967894,
+      "latency_model": 149.19364400000745,
+      "entities": 2,
+      "details": [
+        {
+          "start": 22,
+          "end": 25,
+          "text": "CEO",
+          "label": "job_title",
+          "score": 0.9969706535339355
+        },
+        {
+          "start": 26,
+          "end": 39,
+          "text": "Satya Nadella",
+          "label": "person",
+          "score": 0.9978235960006714
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "text": "My passport number is A1234567.",
+      "latency_api": 494.21341699780896,
+      "latency_model": 130.82798799999296,
+      "entities": 1,
+      "details": [
+        {
+          "start": 22,
+          "end": 30,
+          "text": "A1234567",
+          "label": "passport_number",
+          "score": 0.9999947547912598
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "text": "The driver's license number is D98765432.",
+      "latency_api": 579.07104199694,
+      "latency_model": 197.81798699999342,
+      "entities": 1,
+      "details": [
+        {
+          "start": 31,
+          "end": 40,
+          "text": "D98765432",
+          "label": "drivers_license",
+          "score": 0.9999980926513672
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "text": "Login with username admin and password secret.",
+      "latency_api": 511.37570801074617,
+      "latency_model": 143.21148600001266,
+      "entities": 2,
+      "details": [
+        {
+          "start": 20,
+          "end": 25,
+          "text": "admin",
+          "label": "username",
+          "score": 0.9999661445617676
+        },
+        {
+          "start": 39,
+          "end": 45,
+          "text": "secret",
+          "label": "password",
+          "score": 0.9999886751174927
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "text": "The patient id is 99887766.",
+      "latency_api": 502.9907909920439,
+      "latency_model": 140.99201800000571,
+      "entities": 1,
+      "details": [
+        {
+          "start": 18,
+          "end": 26,
+          "text": "99887766",
+          "label": "id_number",
+          "score": 0.9999912977218628
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "text": "I work for the FBI in Washington DC.",
+      "latency_api": 510.6118330004392,
+      "latency_model": 131.46197800000436,
+      "entities": 2,
+      "details": [
+        {
+          "start": 15,
+          "end": 18,
+          "text": "FBI",
+          "label": "organization",
+          "score": 0.9988627433776855
+        },
+        {
+          "start": 22,
+          "end": 35,
+          "text": "Washington DC",
+          "label": "city",
+          "score": 0.999874472618103
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "text": "My Bitcoin wallet is 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa.",
+      "latency_api": 651.6028749902034,
+      "latency_model": 292.99710499999776,
+      "entities": 1,
+      "details": [
+        {
+          "start": 21,
+          "end": 55,
+          "text": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+          "label": "cryptocurrency_wallet",
+          "score": 0.999992847442627
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "text": "The flight AA100 departs from JFK.",
+      "latency_api": 587.7202910050983,
+      "latency_model": 163.70260400000802,
+      "entities": 2,
+      "details": [
+        {
+          "start": 11,
+          "end": 16,
+          "text": "AA100",
+          "label": "flight_number",
+          "score": 0.9999160766601562
+        },
+        {
+          "start": 30,
+          "end": 33,
+          "text": "JFK",
+          "label": "airport",
+          "score": 0.999998927116394
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "text": "Please refer to ticket #90210 for support.",
+      "latency_api": 502.9463329992723,
+      "latency_model": 142.6999289999884,
+      "entities": 1,
+      "details": [
+        {
+          "start": 24,
+          "end": 29,
+          "text": "90210",
+          "label": "ticket_number",
+          "score": 0.9999462366104126
+        }
+      ]
+    }
+  ]
+}

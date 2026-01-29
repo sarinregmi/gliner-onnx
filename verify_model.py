@@ -32,6 +32,7 @@ def verify():
         import traceback
 
         traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

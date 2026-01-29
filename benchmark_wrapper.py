@@ -3,18 +3,77 @@ GLiNER Benchmark Wrapper for Cloud Run
 Exposes the benchmark script as HTTP endpoints for triggering via curl.
 """
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import subprocess
 import asyncio
 import os
 import torch
+import time
+from typing import List
+
+# Global model variable for caching
+GLOBAL_MODEL = None
 
 app = FastAPI(
     title="GLiNER Benchmark",
     description="GPU-accelerated GLiNER NER benchmark on Cloud Run",
     version="1.0.0",
 )
+
+def load_model():
+    """Load model into global variable if not already loaded."""
+    global GLOBAL_MODEL
+    if GLOBAL_MODEL is None:
+        try:
+            from gliner import GLiNER
+            model_path = "/app/models"
+            if os.path.exists(os.path.join(model_path, "model.onnx")):
+                print(f"Loading ONNX model from {model_path}...")
+                GLOBAL_MODEL = GLiNER.from_pretrained(model_path, load_onnx_model=True)
+                print("Model loaded successfully.")
+            else:
+                print("ONNX model not found, cannot load.")
+        except Exception as e:
+            print(f"Failed to load model: {e}")
+
+# Load model on startup
+@app.on_event("startup")
+async def startup_event():
+    load_model()
+
+class PredictRequest(BaseModel):
+    text: str
+    labels: List[str]
+
+@app.post("/predict")
+async def predict(request: PredictRequest = Body(...)):
+    """
+    Run inference on the loaded model.
+    """
+    global GLOBAL_MODEL
+    if GLOBAL_MODEL is None:
+        load_model()
+    
+    if GLOBAL_MODEL is None:
+        return JSONResponse(
+            {"status": "error", "error": "Model failed to load"}, 
+            status_code=500
+        )
+
+    try:
+        start_time = time.perf_counter()
+        entities = GLOBAL_MODEL.predict_entities(request.text, request.labels)
+        inference_time_ms = (time.perf_counter() - start_time) * 1000
+        
+        return {
+            "entities": entities,
+            "inference_time_ms": inference_time_ms
+        }
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
 
 
 @app.get("/")
@@ -106,21 +165,24 @@ async def run_benchmark(
 async def warmup():
     """Pre-load the GLiNER model to reduce cold start latency."""
     try:
-        from gliner import GLiNER
-
-        # Load model
-        model = GLiNER.from_pretrained("nvidia/gliner-PII")
-        if torch.cuda.is_available():
-            model = model.to("cuda")
-
+        global GLOBAL_MODEL
+        if GLOBAL_MODEL is None:
+            load_model()
+            
+        if GLOBAL_MODEL is None:
+             return JSONResponse(
+                {"status": "error", "error": "Model failed to load"}, 
+                status_code=500
+            )
+        
         # Run a quick inference
-        result = model.predict_entities(
+        result = GLOBAL_MODEL.predict_entities(
             "John Doe works at Microsoft.", ["person", "organization"]
         )
 
         return {
             "status": "warmed_up",
-            "device": "cuda" if torch.cuda.is_available() else "cpu",
+            "device": "onnx",
             "test_entities_found": len(result),
         }
     except Exception as e:
