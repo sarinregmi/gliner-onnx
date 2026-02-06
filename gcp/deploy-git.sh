@@ -9,12 +9,13 @@ set -e
 
 PROJECT_ID="${GCP_PROJECT_ID:-your-project-id}"
 REGION="${GCP_REGION:-us-central1}"
-SERVICE_NAME="gliner-benchmark-git"
+SERVICE_NAME="gliner-cpu-final"
 IMAGE_NAME="gliner-benchmark-git"
 
 # Default configuration
-MEMORY="4Gi"
-CPU="8"
+MEMORY="2Gi"
+CPU="1"
+MAX_INSTANCES="2"
 
 print_header() {
     echo "------------------------------------------------------------"
@@ -66,7 +67,10 @@ create_artifact_registry() {
 deploy() {
     print_header "Deploying to Cloud Run"
     
-    IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${IMAGE_NAME}:latest"
+    # Use IMAGE_URI if set, otherwise default to latest
+    if [ -z "$IMAGE_URI" ]; then
+        IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${IMAGE_NAME}:latest"
+    fi
     
     gcloud run deploy "$SERVICE_NAME" \
         --image "$IMAGE_URI" \
@@ -74,6 +78,7 @@ deploy() {
         --platform managed \
         --memory "$MEMORY" \
         --cpu "$CPU" \
+        --max-instances "$MAX_INSTANCES" \
         --allow-unauthenticated \
         --set-env-vars="GIT_REPO_URL=https://github.com/sarinregmi/gliner-onnx.git" \
         --port 8080
@@ -86,18 +91,28 @@ case "$1" in
         create_artifact_registry
         print_header "Building Heavy Image (including models/)"
         
-        IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${IMAGE_NAME}:latest"
+        TAG=$(date +%Y%m%d%H%M%S)
+        IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${IMAGE_NAME}:${TAG}"
+        LATEST_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/docker-repo/${IMAGE_NAME}:latest"
         
         # Build using the Git-enabled Dockerfile
-        # Note: gcloud builds submit doesn't have a -f flag, so we temporarily symlink or rename
+        # Note: we temporarily rename cloudbuild.yaml so gcloud uses the Dockerfile
+        [ -f cloudbuild.yaml ] && mv cloudbuild.yaml cloudbuild.yaml.bak
         cp Dockerfile.git Dockerfile
+        
         gcloud builds submit \
             --tag "$IMAGE_URI" \
             --timeout=1200s \
             .
-        rm Dockerfile
+            
+        # Also tag as latest
+        gcloud artifacts docker tags add "$IMAGE_URI" "$LATEST_URI" --quiet
         
-        deploy
+        rm Dockerfile
+        [ -f cloudbuild.yaml.bak ] && mv cloudbuild.yaml.bak cloudbuild.yaml
+        
+        # Deploy using the SPECIFIC tag to force update
+        IMAGE_URI="$IMAGE_URI" deploy
         ;;
         
     "update-code")

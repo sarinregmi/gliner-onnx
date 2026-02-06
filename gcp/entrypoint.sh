@@ -15,6 +15,10 @@ echo "============================================================"
 echo "🚀 STARTUP: Syncing with Git"
 echo "Target Repo: $GIT_REPO_URL"
 echo "============================================================"
+echo "🌍 ENVIRONMENT DIAGNOSTICS"
+python3 -c "import numpy; print('Numpy version:', numpy.__version__)"
+python3 -c "import torch; print('Torch version:', torch.__version__)"
+echo "============================================================"
 
 # Clone the repository to a temporary location
 rm -rf "$TEMP_DIR"

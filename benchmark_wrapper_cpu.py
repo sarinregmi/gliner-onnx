@@ -45,6 +45,8 @@ def cpu_info():
         "cpu_count": mp.cpu_count(),
         "numpy_version": np.__version__,
         "torch_version": torch.__version__,
+        "cwd": os.getcwd(),
+        "files": os.listdir("."),
         "torch_threads": torch.get_num_threads(),
         "omp_threads": os.environ.get("OMP_NUM_THREADS", "default"),
         "mkl_threads": os.environ.get("MKL_NUM_THREADS", "default"),
