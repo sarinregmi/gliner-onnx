@@ -25,10 +25,10 @@ rm -rf "$TEMP_DIR"
 git clone --depth 1 "$GIT_REPO_URL" "$TEMP_DIR"
 
 # Copy benchmark scripts AND the gliner library into the working directory
-# We DON'T copy the models/ folder because it's baked into the image.
 echo "Updating benchmark scripts and gliner library..."
 cp "$TEMP_DIR"/*.py /app/
 if [ -d "$TEMP_DIR/gliner" ]; then
+    rm -rf /app/gliner
     cp -r "$TEMP_DIR/gliner" /app/
 fi
 
