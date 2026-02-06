@@ -24,13 +24,13 @@ echo "============================================================"
 rm -rf "$TEMP_DIR"
 git clone --depth 1 "$GIT_REPO_URL" "$TEMP_DIR"
 
-# Copy ONLY the benchmark scripts into the working directory
-# We DON'T copy the models/ or gliner/ folders because they are 
-# already baked into the image and are too large to pull/overwrite.
-echo "Updating benchmark scripts..."
+# Copy benchmark scripts AND the gliner library into the working directory
+# We DON'T copy the models/ folder because it's baked into the image.
+echo "Updating benchmark scripts and gliner library..."
 cp "$TEMP_DIR"/*.py /app/
-# Ensure we don't accidentally overwrite the local gliner folder if it's special
-# but the scripts are what the user typically changes.
+if [ -d "$TEMP_DIR/gliner" ]; then
+    cp -r "$TEMP_DIR/gliner" /app/
+fi
 
 echo "✅ Sync complete."
 echo "============================================================"
