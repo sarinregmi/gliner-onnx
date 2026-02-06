@@ -1,0 +1,73 @@
+# ============================================================================
+# GLiNER CPU-Only Dockerfile for Cloud Run
+# ============================================================================
+# Optimized for CPU inference without CUDA dependencies.
+# Much smaller image size and faster deployment.
+# ============================================================================
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    HF_HOME=/app/.cache/huggingface \
+    TRANSFORMERS_CACHE=/app/.cache/huggingface \
+    OMP_NUM_THREADS=4 \
+    MKL_NUM_THREADS=4 \
+    PORT=8080
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install PyTorch CPU-only (much smaller than CUDA version)
+RUN pip install --no-cache-dir \
+    torch==2.2.0+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# Install ONNX Runtime CPU (not GPU version)
+RUN pip install --no-cache-dir \
+    onnxruntime==1.17.0 \
+    fastapi==0.109.0 \
+    uvicorn[standard]==0.27.0 \
+    transformers==4.38.0 \
+    huggingface_hub==0.20.3 \
+    safetensors==0.4.2 \
+    sentencepiece==0.2.0 \
+    tqdm==4.66.1
+
+# Copy GLiNER library
+COPY gliner /app/gliner
+COPY gliner_config.json /app/
+
+# Copy ONNX models (INT8 quantized for CPU)
+COPY models /app/models
+
+# Copy benchmark scripts
+COPY benchmark_cpu_parallel.py /app/
+COPY benchmark_wrapper_cpu.py /app/
+COPY requirements.txt /app/
+
+# Create cache directory
+RUN mkdir -p /app/.cache/huggingface && chmod -R 777 /app/.cache
+
+# No need to pre-download - using local ONNX model
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/ || exit 1
+
+EXPOSE 8080
+
+CMD ["uvicorn", "benchmark_wrapper_cpu:app", "--host", "0.0.0.0", "--port", "8080"]

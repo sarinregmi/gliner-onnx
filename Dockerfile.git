@@ -1,0 +1,63 @@
+# ============================================================================
+# GLiNER Git-Sync Dockerfile (CPU-Only)
+# ============================================================================
+# This image contains the heavy dependencies and the large model (~650MB).
+# At runtime, it pulls the latest benchmark code from GitHub.
+# ============================================================================
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    GIT_REPO_URL="https://github.com/sarinregmi/gliner-onnx.git" \
+    PORT=8080
+
+# Install system dependencies including Git
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install all dependencies in one go for correct resolution
+RUN pip install --no-cache-dir \
+    "numpy<2.0" \
+    torch==2.2.0+cpu \
+    onnxruntime==1.17.0 \
+    fastapi==0.109.0 \
+    uvicorn[standard]==0.27.0 \
+    transformers==4.38.0 \
+    huggingface_hub==0.20.3 \
+    safetensors==0.4.2 \
+    sentencepiece==0.2.0 \
+    tqdm==4.66.1 \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+# ----------------------------------------------------------------------------
+# BAKE IN THE HEAVY STUFF (Models and Library)
+# ----------------------------------------------------------------------------
+# Note: The first time you build this, it will upload 650MB.
+# After that, you can update code via Git WITHOUT rebuilding this image.
+# ----------------------------------------------------------------------------
+COPY models /app/models
+COPY gliner /app/gliner
+COPY gliner_config.json /app/
+
+# Copy the "hot reload" entrypoint
+COPY gcp/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Copy existing scripts as placeholders (they will be refreshed by git pull)
+COPY *.py /app/
+
+# Create non-root user (optional, but good practice)
+# We need write access to /app/ to allow git clone to overwrite files
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app/entrypoint.sh"]
